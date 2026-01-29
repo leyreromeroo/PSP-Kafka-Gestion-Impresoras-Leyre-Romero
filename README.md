@@ -1,6 +1,6 @@
 # Sistema Gestor de Colas de Impresión - Kafka
 
-Este proyecto implementa un sistema de mensajería distribuida utilizando **Apache Kafka** para gestionar una cola de impresión empresarial. El sistema permite la transformación de documentos, persistencia de originales y distribución eficiente entre múltiples impresoras siguiendo el patrón **Productor-Consumidor**[cite: 9, 15].
+Este proyecto implementa un sistema de mensajería distribuida utilizando **Apache Kafka** para gestionar una cola de impresión empresarial. El sistema permite la transformación de documentos, persistencia de originales y distribución eficiente entre múltiples impresoras siguiendo el patrón **Productor-Consumidor**.
 
 ## 1. Arquitectura de TOPICS
 Se ha diseñado una topología de tres topics para garantizar la independencia de procesos y el escalado horizontal:
@@ -43,5 +43,5 @@ Para asegurar la salud del sistema o realizar un mantenimiento preventivo:
 
 ## 5. Información para el Desarrollador
 * **Dependencia**: Incluir `kafka-clients` v4.1.1 en el `pom.xml`.
-* **Serialización**: Se utiliza `StringSerializer` y `StringDeserializer` para el manejo de los mensajes JSON.
+* **Serialización**: Se utilizan `StringSerializer` y `StringDeserializer` para el manejo de los mensajes JSON.
 * **Paralelismo**: El orquestador debe ser capaz de procesar la persistencia y la transformación de forma asíncrona para máxima eficiencia.
