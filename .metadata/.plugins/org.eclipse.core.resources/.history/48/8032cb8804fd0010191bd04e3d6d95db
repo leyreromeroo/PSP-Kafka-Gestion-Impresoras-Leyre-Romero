@@ -1,0 +1,5 @@
+package com.cuatrovientos.kafka.GestionColaImpresion;
+
+public class Documento {
+
+}

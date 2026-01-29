@@ -32,9 +32,12 @@ public class EmpleadoProductor {
 
 			// 3. Convertimos el objeto a una cadena String (JSON)
 			String jsonDoc = mapper.writeValueAsString(miDoc);
-
+			
 			// 4. Enviamos el JSON al topic
+			System.out.println(">>> Enviando a Kafka el siguiente JSON: " + jsonDoc);
 			productor.send(new ProducerRecord<>(KafkaConfig.TOPIC_GESTOR, miDoc.getSender(), jsonDoc));
+			// Enviamos al topic "gestor-impresoras"
+           
 
 		}
 		catch (Exception e){

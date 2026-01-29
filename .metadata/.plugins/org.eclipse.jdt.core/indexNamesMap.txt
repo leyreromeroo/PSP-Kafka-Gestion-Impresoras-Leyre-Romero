@@ -1,0 +1,3 @@
+INDEX VERSION 1.134
+file:/C:/Users/leyre/Desktop/DAM%202%2025-26/PSP/Kafka-Gestion-Impresoras-Con-Topics/.metadata/.plugins/org.eclipse.jdt.core/1865797976.index
+meta_index

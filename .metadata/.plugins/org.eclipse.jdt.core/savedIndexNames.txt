@@ -1,0 +1,18 @@
+INDEX VERSION 1.134+C:\Users\leyre\Desktop\DAM 2 25-26\PSP\Kafka-Gestion-Impresoras-Con-Topics\PSP-Kafka-Gestion-Impresoras-Leyre-Romero\.metadata\.plugins\org.eclipse.jdt.core
+3344554931.index
+761727186.index
+1066581976.index
+4018444413.index
+4222570870.index
+1591982858.index
+3210610580.index
+1177894001.index
+1282556853.index
+1525993134.index
+1865797976.index
+921671912.index
+1865797976.index
+1738838446.index
+693378069.index
+810142279.index
+3976927780.index
