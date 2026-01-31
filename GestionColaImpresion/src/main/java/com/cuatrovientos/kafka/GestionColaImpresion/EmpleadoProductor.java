@@ -10,46 +10,45 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class EmpleadoProductor {
 
 	public static void main(String[] args) {
+	    KafkaProducer<String, String> productor = null;
 
-		KafkaProducer<String, String> productor = null;
+	    try {
+	        Properties props = new Properties();
+	        props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KafkaConfig.KAFKA_SERVER_IP_PORT); 
+	        props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+	        props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
-		try {
-			Properties props = new Properties();
-			props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KafkaConfig.KAFKA_SERVER_IP_PORT); 
-			props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-			props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+	        productor = new KafkaProducer<>(props);
+	        ObjectMapper mapper = new ObjectMapper();
+	        String topicDestino = "gestor-impresoras"; 
 
-			productor = new KafkaProducer<>(props);
+	        // Generamos 10 peticiones de empleados diferentes
+	        for (int i = 1; i <= 10; i++) {
+	            // Alternamos entre COLOR y BN para probar ambos semáforos
+	            TipoImpresion tipo = (i % 2 == 0) ? TipoImpresion.COLOR : TipoImpresion.BN;
+	            String nombreEmpleado = "Empleado_" + i;
+	            
+	            Documento miDoc = new Documento("Doc_Prueba_" + i, "Contenido del documento numero " + i, tipo, nombreEmpleado);
 
-			// 1. Creamos un documento con contenido largo para probar la paginación de 400 caracteres
-			String contenidoLargo = "Este es un texto muy largo que debería ser dividido en varias páginas por nuestro gestor. ".repeat(10);
-			Documento miDoc = new Documento("Manual_Usuario", contenidoLargo, TipoImpresion.COLOR, "Leyre Romero");
+	            String jsonDoc = mapper.writeValueAsString(miDoc);
+	            System.out.println(">>> [" + nombreEmpleado + "] ENVIANDO: " + miDoc.getTitulo() + " (" + tipo + ")");
 
-			ObjectMapper mapper = new ObjectMapper();
+	            ProducerRecord<String, String> record = new ProducerRecord<>(topicDestino, jsonDoc);
 
-			// 2. El empleado envía al GESTOR, no a la impresora final
-			String topicDestino = "gestor-impresoras"; 
+	            productor.send(record);
+	            
+	            // Un pequeño retraso para simular que no todos dan al botón a la vez
+	            Thread.sleep(200); 
+	        }
 
-			String jsonDoc = mapper.writeValueAsString(miDoc);
-			System.out.println(">>> ENVIANDO PETICIÓN AL GESTOR: " + miDoc.getTitulo());
-
-			ProducerRecord<String, String> record = new ProducerRecord<>(topicDestino, jsonDoc);
-
-			productor.send(record, (metadata, e) -> {
-				if (e == null) {
-					System.out.println("Documento recibido por el sistema de gestión.");
-				} else {
-					System.err.println("Error de comunicación: " + e.getMessage());
-				}
-			});
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			if (productor != null) {
-				productor.flush();
-				productor.close();
-			}
-		}
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } finally {
+	        if (productor != null) {
+	            productor.flush();
+	            productor.close();
+	        }
+	    }
+	
 	}
 }
