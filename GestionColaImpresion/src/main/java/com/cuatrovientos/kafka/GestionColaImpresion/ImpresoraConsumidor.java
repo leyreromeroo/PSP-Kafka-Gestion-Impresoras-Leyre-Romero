@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.util.concurrent.Semaphore;
 
 public class ImpresoraConsumidor {
-	// RECURSOS LIMITADOS
-	// 2 impresoras en color y 3 impresoras en B/N
+	/**
+	 * Implementación de exclusión mutua mediante Semáforos.
+	 * Controla el acceso a recursos limitados (impresoras) evitando 
+	 * condiciones de carrera y gestionando la cola de hilos de forma segura.
+	 */
 	private final Semaphore semColor = new Semaphore(2);
 	private final Semaphore semBN = new Semaphore(3);
 
