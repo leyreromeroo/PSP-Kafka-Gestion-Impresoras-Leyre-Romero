@@ -3,54 +3,76 @@ package com.cuatrovientos.kafka.GestionColaImpresion;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Properties;
 import java.util.concurrent.Semaphore;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+import com.google.gson.Gson;
 
 public class ImpresoraConsumidor {
-	/**
-	 * Implementación de exclusión mutua mediante Semáforos.
-	 * Controla el acceso a recursos limitados (impresoras) evitando 
-	 * condiciones de carrera y gestionando la cola de hilos de forma segura.
-	 */
-	private final Semaphore semColor = new Semaphore(2);
-	private final Semaphore semBN = new Semaphore(3);
+    // Semáforos
+    private static final Semaphore semColor = new Semaphore(2);
+    private static final Semaphore semBN = new Semaphore(3);
 
-	/**
-	 * Simula la impresión de un documento controlando el acceso a las impresoras físicas
-	 * @param doc El documento o página a imprimir
-	 */
-	public void imprimir(Documento doc) {
-		// Seleccionamos el semáforo y la carpeta destino según el tipo
-		Semaphore semaforo = (doc.getTipo() == TipoImpresion.COLOR) ? semColor : semBN;
-		String nombreImpresora = (doc.getTipo() == TipoImpresion.COLOR) ? "COLOR-P2" : "BN-PASILLO";
-		String carpetaDestino = "impresoras_finales/" + nombreImpresora;
+    public static void main(String[] args) {
+        // 1. Configuración de Kafka 
+        Properties props = new Properties();
+        props.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "127.0.0.1:9092");
+        props.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.setProperty(ConsumerConfig.GROUP_ID_CONFIG, "grupo-impresoras");
+        props.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
-		try {
-			// Intentamos adquirir el recurso (hacer cola si están todas ocupadas)
-			semaforo.acquire(); 
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        
+        // 2. Suscribirse a ambos topics (BN y Color)
+        consumer.subscribe(Arrays.asList("impresion-bn", "impresion-color"));
 
-			System.out.println("[TRABAJANDO] Impresora " + nombreImpresora + " imprimiendo: " + doc.getTitulo());
+        System.out.println("Impresoras listas. Esperando documentos...");
 
-			// Simulación de la impresión física: Crear el archivo en la carpeta correspondiente
-			File dir = new File(carpetaDestino);
-			if (!dir.exists()) dir.mkdirs();
+        try {
+            while (true) {
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
+                for (ConsumerRecord<String, String> record : records) {
+                    // Por cada mensaje, lanzamos un HILO para no bloquear el consumidor
+                    new Thread(() -> {
+                        // Aquí convertimos el JSON a Documento 
+                    	Gson gson = new Gson();
+                    	Documento doc = gson.fromJson(record.value(), Documento.class);
+                    	imprimir(doc); // Aquí ya llama a tu método con los semáforos
+                        System.out.println("Recibido trabajo de: " + record.topic());
+                    }).start();
+                }
+            }
+        } finally {
+            consumer.close();
+        }
+    }
 
-			// Usamos System.nanoTime() para que si un documento tiene varias páginas, no se sobrescriban
-			String nombreFichero = doc.getTitulo().replace(" ", "_") + "_" + System.nanoTime() + ".txt";
-			try (FileWriter writer = new FileWriter(new File(dir, nombreFichero))) {
-				writer.write("REMITENTE: " + doc.getSender() + "\n");
-				writer.write("CONTENIDO:\n" + doc.getContenido());
-			}
+    public static void imprimir(Documento doc) {
+        Semaphore semaforo = (doc.getTipo() == TipoImpresion.COLOR) ? semColor : semBN;
+        String nombreImpresora = (doc.getTipo() == TipoImpresion.COLOR) ? "COLOR-P2" : "BN-PASILLO";
+        String carpetaDestino = "impresoras_finales/" + nombreImpresora;
 
-			// Simulamos el tiempo que tarda la máquina en imprimir (1.5 segundos)
-			Thread.sleep(1500); 
+        try {
+            semaforo.acquire(); // PSP: Exclusión mutua
+            System.out.println("[TRABAJANDO] " + nombreImpresora + " imprimiendo: " + doc.getTitulo());
+            
+            File dir = new File(carpetaDestino);
+            if (!dir.exists()) dir.mkdirs();
 
-		} catch (InterruptedException | IOException e) {
-			System.err.println("Error en el proceso de impresión: " + e.getMessage());
-			Thread.currentThread().interrupt();
-		} finally {
-			// Liberamos el semáforo para que otros puedan imprimir
-			semaforo.release();
-			System.out.println("[FINALIZADO] " + doc.getTitulo() + " en " + nombreImpresora);
-		}
-	}
+            Thread.sleep(1500); // Simulamos tiempo de impresión
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            semaforo.release(); // Liberar recurso
+            System.out.println("[FINALIZADO] " + doc.getTitulo());
+        }
+    }
 }

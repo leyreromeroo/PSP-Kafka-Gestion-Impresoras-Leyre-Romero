@@ -70,7 +70,7 @@ public class GestorConsumidor {
 			Documento docTransformado = new Documento(doc.getTitulo(), contenidoPagina, doc.getTipo(), doc.getSender());
 
 			// Simulamos el envío a la impresora física usando nuestra clase de control de recursos
-			impresoraSimulador.imprimir(docTransformado);
+			ImpresoraConsumidor.imprimir(docTransformado);
 		}
 	}
 
@@ -95,5 +95,13 @@ public class GestorConsumidor {
 			paginas.add(contenido.substring(i, Math.min(length, i + 400)));
 		}
 		return paginas;
+	}
+
+	public static ImpresoraConsumidor getImpresoraSimulador() {
+		return impresoraSimulador;
+	}
+
+	public static void setImpresoraSimulador(ImpresoraConsumidor impresoraSimulador) {
+		GestorConsumidor.impresoraSimulador = impresoraSimulador;
 	}
 }
