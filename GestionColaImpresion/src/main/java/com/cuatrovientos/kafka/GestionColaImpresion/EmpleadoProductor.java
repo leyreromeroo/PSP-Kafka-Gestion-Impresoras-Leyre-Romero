@@ -1,12 +1,10 @@
 package com.cuatrovientos.kafka.GestionColaImpresion;
 
 import java.util.Properties;
-
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class EmpleadoProductor {
@@ -16,35 +14,38 @@ public class EmpleadoProductor {
 		KafkaProducer<String, String> productor = null;
 
 		try {
-
 			Properties props = new Properties();
-			props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KafkaConfig.KAFKA_SERVER_IP_PORT);
+			props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KafkaConfig.KAFKA_SERVER_IP_PORT); 
 			props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 			props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
 			productor = new KafkaProducer<>(props);
-			
-			// 1. Creamos el objeto con datos de prueba
-			Documento miDoc = new Documento("Factura_001", "Contenido de la factura...", TipoImpresion.BN, "Leyre Romero");
 
-			// 2. Jackson ObjectMapper para convertir a JSON
+			// 1. Creamos un documento con contenido largo para probar la paginación de 400 caracteres
+			String contenidoLargo = "Este es un texto muy largo que debería ser dividido en varias páginas por nuestro gestor. ".repeat(10);
+			Documento miDoc = new Documento("Manual_Usuario", contenidoLargo, TipoImpresion.COLOR, "Leyre Romero");
+
 			ObjectMapper mapper = new ObjectMapper();
 
-			// 3. Convertimos el objeto a una cadena String (JSON)
-			String jsonDoc = mapper.writeValueAsString(miDoc);
-			
-			// 4. Enviamos el JSON al topic
-			System.out.println(">>> Enviando a Kafka el siguiente JSON: " + jsonDoc);
-			productor.send(new ProducerRecord<>(KafkaConfig.TOPIC_GESTOR, miDoc.getSender(), jsonDoc));
-			// Enviamos al topic "gestor-impresoras"
-           
+			// 2. El empleado envía al GESTOR, no a la impresora final
+			String topicDestino = "gestor-impresoras"; 
 
-		}
-		catch (Exception e){
-			System.err.println("Excepcion general al intentar generar documentos: "+e.getMessage());
+			String jsonDoc = mapper.writeValueAsString(miDoc);
+			System.out.println(">>> ENVIANDO PETICIÓN AL GESTOR: " + miDoc.getTitulo());
+
+			ProducerRecord<String, String> record = new ProducerRecord<>(topicDestino, jsonDoc);
+
+			productor.send(record, (metadata, e) -> {
+				if (e == null) {
+					System.out.println("Documento recibido por el sistema de gestión.");
+				} else {
+					System.err.println("Error de comunicación: " + e.getMessage());
+				}
+			});
+
+		} catch (Exception e) {
 			e.printStackTrace();
-		}
-		finally {
+		} finally {
 			if (productor != null) {
 				productor.flush();
 				productor.close();
