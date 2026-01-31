@@ -5,18 +5,18 @@ public class Documento {
 	private String contenido;
 	private TipoImpresion tipo;
 	private String sender;
-	
+
 	public Documento() {
-	    // Necesario para la deserialización de JSON
+		// Necesario para la deserialización de JSON
 	}
-	
+
 	public Documento(String titulo, String contenido, TipoImpresion tipo, String sender) {
 		this.titulo = titulo;
 		this.contenido = contenido;
 		this.tipo = tipo;
 		this.sender = sender;
 	}
-	
+
 	public String getTitulo() {
 		return titulo;
 	}
@@ -46,8 +46,7 @@ public class Documento {
 	public String toString() {
 		return "Documento:" + titulo + ", contenido:" + contenido + ", tipo:" + tipo + ", enviado por:" + sender;
 	}
-	
-	
-	
+
 }
+
 
