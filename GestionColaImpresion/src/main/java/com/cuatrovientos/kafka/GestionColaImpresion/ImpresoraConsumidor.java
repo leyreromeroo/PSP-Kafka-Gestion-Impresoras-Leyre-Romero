@@ -28,7 +28,7 @@ public class ImpresoraConsumidor {
 			// Intentamos adquirir el recurso (hacer cola si están todas ocupadas)
 			semaforo.acquire(); 
 
-			System.out.println("🖨️ [TRABAJANDO] Impresora " + nombreImpresora + " imprimiendo: " + doc.getTitulo());
+			System.out.println("[TRABAJANDO] Impresora " + nombreImpresora + " imprimiendo: " + doc.getTitulo());
 
 			// Simulación de la impresión física: Crear el archivo en la carpeta correspondiente
 			File dir = new File(carpetaDestino);

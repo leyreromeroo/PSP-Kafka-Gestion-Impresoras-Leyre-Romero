@@ -65,7 +65,6 @@ public class GestorConsumidor {
 		List<String> paginas = paginarContenido(doc.getContenido());
 
 		// Creamos una versión del documento "preparada" para la impresora
-		// (En un entorno real, enviarías un mensaje por cada página a un nuevo Topic de Kafka)
 		for (int i = 0; i < paginas.size(); i++) {
 			String contenidoPagina = "PÁGINA " + (i + 1) + "/" + paginas.size() + "\n" + paginas.get(i);
 			Documento docTransformado = new Documento(doc.getTitulo(), contenidoPagina, doc.getTipo(), doc.getSender());
